@@ -1,0 +1,359 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+    <link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" integrity="sha384-BVYiiSIFeK1dGmJRAkycuHAHRg32OmUcww7on3RYdg4Va+PmSTsz/K68vbdEjh4u" crossorigin="anonymous">
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+   
+    <link rel="stylesheet" type="text/css" href="//cdn.datatables.net/1.10.15/css/jquery.dataTables.css">
+    <script type="text/javascript" charset="utf8" src="//cdn.datatables.net/1.10.15/js/jquery.dataTables.js"></script>
+    <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+    <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 100%;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      #search {
+        opacity: 1.0;
+        align: center;
+      }
+      .over_map {
+        width: 20%;
+        height: 90%;
+        position: absolute;
+        top: 0;
+        right: 0;
+        background-color: orange;
+        opacity: 0.35;
+        text-align: center;
+      }
+      .over_map {
+        z-index: 10;
+        right: 0;
+      }
+      .over_map:hover {
+        opacity: .9;
+      }
+    </style>
+
+
+  </head>
+  
+
+
+  <body>
+
+    <div style="width: 100%; height: 100%;">
+      <div id="map"></div>
+      <div class="over_map" style="height:75%;">
+        
+        <div class="row">
+          <div id="search">
+            <h1 style="color: darkblue">Search by offense</h1>
+            <input type="text" id="query" placeholder="Search for crime here">
+            <button id="search_crime">Search</button>
+            <br><br>
+        </div>
+
+ 
+          
+          <br><br><br><br>
+          
+          <div class="row">
+          <h1>Search by broad category</h1>
+          </div>
+          <div class="row">
+            <div class="col-sm-4">
+              <button>Category 1</button>
+            </div>
+            <div class="col-sm-4">
+            <button>Category 2</button>
+            </div>
+            <div class="col-sm-4">
+            <button>Category 3</button>
+            </div>
+          </div>
+          <br><br>
+          <div class="row">
+            <div class="col-sm-2"></div>
+            <div class="col-sm-4">
+              <button>Category 4</button>
+            </div>
+            <div class="col-sm-4">
+              <button>Category 5</button>
+            </div>
+            <div class="col-sm-2"></div>
+
+        </div>
+
+  
+    <div id="under_map">
+    <br><br>
+      <h1>Explore The Data</h1>
+      <table id="table_id"></table>
+    </div>
+    </div>
+
+
+
+
+
+  <script>
+    
+    // Declare global variables to hold markers
+    var map;
+    var markersArray = [];
+
+    // Define a function to clear the markers whenever we want
+    function clearOverlays() {
+      for (var i = 0; i < markersArray.length; i++ ) {
+        markersArray[i].setMap(null);
+      }
+      markersArray.length = 0;
+    }
+
+    // Initiate the map and nicely stylize it
+    function initMap() {
+      geocoder = new google.maps.Geocoder();
+      var mapOptions = {
+          zoom: 16,
+          center: new google.maps.LatLng(35.9132, -79.0558), 
+          styles: [{"featureType":"water","elementType":"geometry","stylers":[{"color":"#193341"}]},{"featureType":"landscape","elementType":"geometry","stylers":[{"color":"#2c5a71"}]},{"featureType":"road","elementType":"geometry","stylers":[{"color":"#29768a"},{"lightness":-37}]},{"featureType":"poi","elementType":"geometry","stylers":[{"color":"#406d80"}]},{"featureType":"transit","elementType":"geometry","stylers":[{"color":"#406d80"}]},{"elementType":"labels.text.stroke","stylers":[{"visibility":"on"},{"color":"#3e606f"},{"weight":2},{"gamma":0.84}]},{"elementType":"labels.text.fill","stylers":[{"color":"#ffffff"}]},{"featureType":"administrative","elementType":"geometry","stylers":[{"weight":0.6},{"color":"#1a3541"}]},{"elementType":"labels.icon","stylers":[{"visibility":"off"}]},{"featureType":"poi.park","elementType":"geometry","stylers":[{"color":"#2c5a71"}]}]
+      };
+      var mapElement = document.getElementById('map');
+      map = new google.maps.Map(mapElement, mapOptions);
+
+      var craigeCoords = [
+      new google.maps.LatLng(35.90272576973942, -79.04531121253967),
+      new google.maps.LatLng(35.902960413017446, -79.04554188251495),
+      new google.maps.LatLng(35.90300821063693, -79.0454775094986),
+      new google.maps.LatLng(35.902986484449855, -79.0454614162445),
+      new google.maps.LatLng(35.90302124634634, -79.04540240764618),
+      new google.maps.LatLng(35.90283005572665, -79.04519855976105),
+      new google.maps.LatLng(35.90282136523296, -79.04504835605621),
+      new google.maps.LatLng(35.902977793973335, -79.04478549957275),
+      new google.maps.LatLng(35.90294303205774, -79.04473721981049),
+      new google.maps.LatLng(35.90290827012691, -79.04465675354004),
+      new google.maps.LatLng(35.90271273398135, -79.0449571609497),
+      new google.maps.LatLng(35.902456363636375, -79.04471576213837),
+      new google.maps.LatLng(35.90239118460272, -79.04481768608093),
+      new google.maps.LatLng(35.90267797194935, -79.04513284564018),
+      new google.maps.LatLng(35.902442241516965, -79.0454962849617),
+      new google.maps.LatLng(35.90248026260193, -79.04553920030594),
+      new google.maps.LatLng(35.90247048575327, -79.04555663466454),
+      new google.maps.LatLng(35.9025150247208, -79.04560223221779),
+      new google.maps.LatLng(35.90272794236556, -79.04531121253967)
+      ];
+      var craige = new google.maps.Polygon({
+        path: craigeCoords,
+        geodesic: true,
+        strokeColor: '#FF0000',
+        strokeOpacity: .4,
+        strokeWeight: 2
+      })
+
+      craige.setMap(map);
+    }
+
+
+      // Document ready function
+      $(document).ready(function() {
+
+
+        window.crime = [];
+
+        $( function() {
+          $( "#slider" ).slider();
+        } );
+	
+       var CSVs = ["static/data/1001-to-2000.csv", "static/data/20001-to-22000.csv", "static/data/7001-to-9000.csv","static/data/11001-to-12000.csv", "static/data/2001-to-3000.csv", "static/data/9001-to-11000.csv","static/data/12001-to-14000.csv",  "static/data/22001-to-24000.csv","static/data/14001-to-16000.csv",  "static/data/24001-to-26000.csv", "static/data/16001-to-18000.csv",  "static/data/3001-to-4000.csv", "static/data/18001-to-20000.csv",  "static/data/4001-to-5000.csv", "static/data/1-to-1000.csv", "static/data/5001-to-7000.csv"];
+       
+        // Parse each csv and add to window.crime
+        for (i=0; i<CSVs.length; i++){
+        $.ajax({
+            type: "GET",
+            url: CSVs[i],
+            dataType: "text",
+            success: function(data) {pushToCrimeObject(data);}
+         });
+        }
+
+        // Display markers when the user presses "ENTER"
+        $('#query').keypress(function(e){
+          if(e.keyCode==13)
+          $('#search_crime').click();
+        });
+
+
+        $('.nstSlider').nstSlider({
+          "rounding": {
+              "100": "1000",
+              "1000": "10000",
+              "10000": "100000"
+          },
+          "left_grip_selector": ".leftGrip",
+          "right_grip_selector": ".rightGrip",
+          "value_bar_selector": ".bar",
+          "value_changed_callback": function(cause, leftValue, rightValue) {
+              var $container = $(this).parent();
+              $container.find('.leftLabel').text(leftValue);
+              $container.find('.rightLabel').text(rightValue);
+          }
+      });
+
+
+        $scope.slider = {
+          value: 10
+      };
+      });
+
+      // Callback for after the ajax call scoops the csv
+      function pushToCrimeObject(allText) {
+        var allTextLines = allText.split(/\r\n|\n/);
+        var headers = allTextLines[0].split(',');
+        var lines = [];
+        for (var i=1; i<allTextLines.length; i++) {
+            var data = allTextLines[i].split(',');
+            if (data.length == headers.length) {
+                var tarr = [];
+                for (var j=0; j<headers.length; j++) {
+                  tarr[headers[j]] = data[j];
+                  
+                }
+                lines.push(tarr);
+            }
+        }
+         // Master array of objects for all crimes in .csv
+        for (i=0; i<lines.length; i++) {
+          window.crime.push(lines[i]);
+        } 
+      }
+        // Get unique offenses and then populate table
+        function getUniqueOffenses() {
+        var offenses = [];
+        for (i=0; i<window.crime.length; i++) {
+          offenses.push(window.crime[i].offense);
+        }
+        var uniqueOffenses = [];
+        $.each(offenses, function(i, el){
+          if($.inArray(el, uniqueOffenses) === -1) uniqueOffenses.push(el);
+        });
+        window.uniqueOffenses = uniqueOffenses;
+        
+        $('#table_id').DataTable( {
+        "data": window.crime, 
+        "columns": [
+          {"data": "date_rept"},
+          {"data": "offense"},
+          {"data": "street"},
+          {"data": "date_occu"}
+        ]
+      });
+        
+        $( "#query" ).autocomplete({
+          source: window.uniqueOffenses
+        });
+      }
+
+      function attachSecretMessage(marker, secretMessage) {
+        var infowindow = new google.maps.InfoWindow({
+          content: secretMessage
+        });
+
+        marker.addListener('click', function() {
+          infowindow.open(marker.get('map'), marker);
+        });
+      }
+
+      function insertMarker(data){
+
+        // Insert a marker with some data
+        var myLatlng = new google.maps.LatLng(parseFloat(data.lat),parseFloat(data.lng));
+        var goldStar = {
+          path: 'M 125,5 155,90 245,90 175,145 200,230 125,180 50,230 75,145 5,90 95,90 z',
+          fillColor: 'yellow',
+          fillOpacity: 0.8,
+          scale: 1,
+          strokeColor: 'gold',
+          strokeWeight: 14
+        };
+        var marker = new google.maps.Marker({
+            animation: google.maps.Animation.DROP,
+            position: myLatlng,
+            map: map,
+            title: data.offense,
+          });
+        var msg = data.offense + " occurred at " + data.street + " on " + data.date_occu;
+        attachSecretMessage(marker, msg);
+
+        markersArray.push(marker);
+      }
+
+      function getCoordsFromQueryAndAddMarkers(query) {
+        // First, delete all current markers
+        clearOverlays();
+        if (query == "") {
+          return "Error: Must pass a real query."
+        }
+        else {
+          coords = [];
+          for (i=0; i<window.crime.length; i++) {
+            var offense = window.crime[i].offense;
+            if (offense.indexOf(query) !== -1) { // If the substring is contained
+              
+              var new_data = {
+                "lat": window.crime[i].latitude, 
+                "lng": window.crime[i].longitude, 
+                "street": window.crime[i].street,
+                "offense": window.crime[i].offense,
+                "date_occu": window.crime[i].date_occu
+              };
+              insertMarker(new_data);
+            }
+          }
+          window.coords = coords;
+        }
+      }
+
+      // Wrapper to run getCoordsFromQueryAndAddMarkers on click
+      $("#search_crime").click(function(){
+        var query = $("#query").val().toUpperCase();
+        getCoordsFromQueryAndAddMarkers(query);
+      });
+
+      // Hard coded categories used for exploration
+      $("#category1").click(function(){
+        getCoordsFromQueryAndAddMarkers("ASSAULT");
+      });
+
+      $("#category2").click(function(){
+        getCoordsFromQueryAndAddMarkers("TABLE SAW");
+      });
+
+      $("#category3").click(function(){
+        getCoordsFromQueryAndAddMarkers("RAPE");
+      });
+    </script>
+
+
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyC_GqpDrZWdO7Yygr-tm-ZBx2C85ZOCc7Q&callback=initMap"
+    async defer>
+      
+    </script>
+
+
+  </body>
+</html>
